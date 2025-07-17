@@ -58,7 +58,8 @@ fun MealDetailScreen(
     Column(modifier = Modifier.fillMaxSize()) {
         // Top App Bar
         TopAppBar(
-            title = { Text("Meal Details") },
+//            title = { Text("Meal Details") },
+            title = { Text("") },
             navigationIcon = {
                 IconButton(onClick = onBackClick) {
                     Icon(Icons.Default.ArrowBack, contentDescription = "Back")

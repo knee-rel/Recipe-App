@@ -5,8 +5,14 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.exclude
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
@@ -59,6 +65,7 @@ fun RecipeApp() {
     var currentScreen by remember { mutableStateOf("categories") }
     var selectedCategory by remember { mutableStateOf("") }
     var selectedMealId by remember { mutableStateOf("") }
+    var previousScreen by remember { mutableStateOf("categories") }
 
     val bottomNavItems = listOf(
         Screen.Categories,
@@ -69,6 +76,17 @@ fun RecipeApp() {
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
+        contentWindowInsets = if (currentScreen in listOf(
+                "categories",
+                "search",
+                "favorites",
+                "settings"
+            )
+        ) {
+            WindowInsets.systemBars.exclude(WindowInsets.navigationBars)
+        } else {
+            WindowInsets.systemBars
+        },
         bottomBar = {
             if (currentScreen in listOf("categories", "search", "favorites", "settings")) {
                 NavigationBar {
@@ -77,7 +95,10 @@ fun RecipeApp() {
                             icon = { Icon(screen.icon, contentDescription = screen.title) },
                             label = { Text(screen.title) },
                             selected = currentScreen == screen.route,
-                            onClick = { currentScreen = screen.route }
+                            onClick = {
+                                currentScreen = screen.route
+                                previousScreen = currentScreen
+                            }
                         )
                     }
                 }
@@ -87,9 +108,12 @@ fun RecipeApp() {
         when (currentScreen) {
             "categories" -> {
                 RecipeScreen(
-                    modifier = Modifier.padding(innerPadding),
+                    modifier = Modifier.fillMaxSize()
+                        .padding(innerPadding)
+                        .windowInsetsPadding(WindowInsets.statusBars),
                     onCategoryClick = { category ->
                         selectedCategory = category
+                        previousScreen = currentScreen
                         currentScreen = "meals"
                     }
                 )
@@ -98,7 +122,7 @@ fun RecipeApp() {
             "meals" -> {
                 MealsScreen(
                     category = selectedCategory,
-                    onBackClick = { currentScreen = "categories" },
+                    onBackClick = { currentScreen = previousScreen },
                     onMealClick = { mealId ->
                         selectedMealId = mealId
                         currentScreen = "meal_detail"
@@ -107,13 +131,16 @@ fun RecipeApp() {
             }
 
             "meal_detail" -> {
-                MealDetailScreen(mealId = selectedMealId, onBackClick = { currentScreen = "meals" })
+                MealDetailScreen(
+                    mealId = selectedMealId,
+                    onBackClick = { currentScreen = previousScreen })
             }
 
             "search" -> {
                 SearchScreen(
                     onMealClick = { mealId ->
                         selectedMealId = mealId
+                        previousScreen = currentScreen
                         currentScreen = "meal_detail"
                     }
                 )
