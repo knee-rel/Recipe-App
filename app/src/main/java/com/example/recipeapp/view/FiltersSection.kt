@@ -55,19 +55,30 @@ fun FiltersSection(
                     selectedValue = filters.category,
                     options = categories.data.map { it.strCategory },
                     onValueSelected = { category ->
-                        onFiltersChanged(filters.copy(category = category))
+//                        onFiltersChanged(filters.copy(category = category))
+                        val newFilters = filters.copy(category = category)
+                        onFiltersChanged(newFilters)
                     }
                 )
             }
 
             // Area Filter
             if (areas is UiState.Success) {
+                println("🟡 FiltersSection - Rendering Area dropdown")
+                println("   Current filters.area: '${filters.area}'")
+                println("   Available areas: ${areas.data.take(3).map { it.strArea }}")
+
                 FilterDropdown(
                     label = "Cuisine",
                     selectedValue = filters.area,
                     options = areas.data.map { it.strArea },
                     onValueSelected = { area ->
-                        onFiltersChanged(filters.copy(area = area))
+                        println("🟠 FiltersSection - Area callback RECEIVED: '$area'")
+                        val newFilters = filters.copy(area = area)
+                        println("   Created newFilters: $newFilters")
+                        println("   About to call onFiltersChanged...")
+                        onFiltersChanged(newFilters)
+                        println("   onFiltersChanged called successfully")
                     }
                 )
             }
@@ -80,7 +91,9 @@ fun FiltersSection(
                     options = ingredients.data.take(20)
                         .map { it.strIngredient }, // Limit for performance
                     onValueSelected = { ingredient ->
-                        onFiltersChanged(filters.copy(ingredient = ingredient))
+//                        onFiltersChanged(filters.copy(ingredient = ingredient))
+                        val newFilters = filters.copy(ingredient = ingredient)
+                        onFiltersChanged(newFilters)
                     }
                 )
             }
@@ -104,7 +117,9 @@ fun FiltersSection(
                                 } else {
                                     filters.dietaryRestrictions + restriction
                                 }
-                            onFiltersChanged(filters.copy(dietaryRestrictions = newRestrictions))
+//                            onFiltersChanged(filters.copy(dietaryRestrictions = newRestrictions))
+                            val newFilters = filters.copy(dietaryRestrictions = newRestrictions)
+                            onFiltersChanged(newFilters)
                         },
                         label = { Text(restriction.displayName) }
                     )

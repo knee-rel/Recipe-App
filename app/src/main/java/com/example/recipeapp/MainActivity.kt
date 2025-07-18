@@ -1,10 +1,10 @@
-// Enhanced MainActivity.kt - Gradual approach
 package com.example.recipeapp
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.exclude
 import androidx.compose.foundation.layout.fillMaxSize
@@ -28,12 +28,6 @@ import com.example.recipeapp.view.MealsScreen
 import com.example.recipeapp.view.RecipeScreen
 import com.example.recipeapp.view.SearchScreen
 import com.example.recipeapp.view.SettingsScreen
-
-// Import new screens as you create them
-// import com.example.recipeapp.view.SearchScreen
-// import com.example.recipeapp.view.MealDetailScreen
-// import com.example.recipeapp.view.FavoritesScreen
-// import com.example.recipeapp.view.SettingsScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -61,11 +55,11 @@ sealed class Screen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RecipeApp() {
-    // Keep your existing navigation state
     var currentScreen by remember { mutableStateOf("categories") }
     var selectedCategory by remember { mutableStateOf("") }
     var selectedMealId by remember { mutableStateOf("") }
-    var previousScreen by remember { mutableStateOf("categories") }
+
+    var navigationStack by remember { mutableStateOf(listOf<String>()) }
 
     val bottomNavItems = listOf(
         Screen.Categories,
@@ -74,19 +68,28 @@ fun RecipeApp() {
         Screen.Settings
     )
 
+    fun navigateTo(newScreen: String) {
+        navigationStack = navigationStack + currentScreen
+        currentScreen = newScreen
+    }
+
+    fun navigateBack() {
+        if (navigationStack.isNotEmpty()) {
+            val previousScreen = navigationStack.last()
+            navigationStack = navigationStack.dropLast(1)
+            currentScreen = previousScreen
+        } else {
+            println("Navigation stack empty, cannot go back")
+        }
+    }
+
+    fun resetNavigationTo(newScreen: String) {
+        navigationStack = emptyList()
+        currentScreen = newScreen
+    }
+
     Scaffold(
         modifier = Modifier.fillMaxSize(),
-        contentWindowInsets = if (currentScreen in listOf(
-                "categories",
-                "search",
-                "favorites",
-                "settings"
-            )
-        ) {
-            WindowInsets.systemBars.exclude(WindowInsets.navigationBars)
-        } else {
-            WindowInsets.systemBars
-        },
         bottomBar = {
             if (currentScreen in listOf("categories", "search", "favorites", "settings")) {
                 NavigationBar {
@@ -96,67 +99,72 @@ fun RecipeApp() {
                             label = { Text(screen.title) },
                             selected = currentScreen == screen.route,
                             onClick = {
-                                currentScreen = screen.route
-                                previousScreen = currentScreen
+                                resetNavigationTo(screen.route)
                             }
                         )
                     }
                 }
             }
         }
-    ) { innerPadding ->
-        when (currentScreen) {
-            "categories" -> {
-                RecipeScreen(
-                    modifier = Modifier.fillMaxSize()
-                        .padding(innerPadding)
-                        .windowInsetsPadding(WindowInsets.statusBars),
-                    onCategoryClick = { category ->
-                        selectedCategory = category
-                        previousScreen = currentScreen
-                        currentScreen = "meals"
-                    }
-                )
-            }
+    ) { paddingValues ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+        ) {
+            when (currentScreen) {
+                "categories" -> {
+                    RecipeScreen(
+                        onCategoryClick = { category ->
+                            selectedCategory = category
+                            navigateTo("meals")
+                        }
+                    )
+                }
 
-            "meals" -> {
-                MealsScreen(
-                    category = selectedCategory,
-                    onBackClick = { currentScreen = previousScreen },
-                    onMealClick = { mealId ->
-                        selectedMealId = mealId
-                        currentScreen = "meal_detail"
-                    }
-                )
-            }
+                "meals" -> {
+                    MealsScreen(
+                        category = selectedCategory,
+                        onBackClick = {
+                            navigateBack()
+                        },
+                        onMealClick = { mealId ->
+                            selectedMealId = mealId
+                            navigateTo("meal_detail")
+                        }
+                    )
+                }
 
-            "meal_detail" -> {
-                MealDetailScreen(
-                    mealId = selectedMealId,
-                    onBackClick = { currentScreen = previousScreen })
-            }
+                "meal_detail" -> {
+                    MealDetailScreen(
+                        mealId = selectedMealId,
+                        onBackClick = {
+                            navigateBack()
+                        }
+                    )
+                }
 
-            "search" -> {
-                SearchScreen(
-                    onMealClick = { mealId ->
-                        selectedMealId = mealId
-                        previousScreen = currentScreen
-                        currentScreen = "meal_detail"
-                    }
-                )
-            }
+                "search" -> {
+                    SearchScreen(
+                        onMealClick = { mealId ->
+                            selectedMealId = mealId
+                            navigateTo("meal_detail")
+                        }
+                    )
+                }
 
-            "favorites" -> {
-                FavoritesScreen(
-                    onMealClick = { mealId ->
-                        selectedMealId = mealId
-                        currentScreen = "meal_detail"
-                    }
-                )
-            }
+                "favorites" -> {
+                    FavoritesScreen(
+                        onMealClick = { mealId ->
+                            selectedMealId = mealId
+                            navigateTo("meal_detail")
+                        }
+                    )
+                }
 
-            "settings" -> {
-                SettingsScreen()
+                "settings" -> {
+                    SettingsScreen()
+                }
             }
         }
     }

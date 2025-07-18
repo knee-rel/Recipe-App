@@ -70,6 +70,9 @@ fun SearchScreen(
 
     // Debounced search for suggestions
     LaunchedEffect(searchQuery) {
+        println("🟣 SearchScreen - currentFilters STATE CHANGED")
+        println("   New currentFilters: $currentFilters")
+        println("   area: '${currentFilters.area}'")
         if (searchQuery.length >= 2) {
             delay(300) // Debounce delay
             searchViewModel.loadSearchSuggestions(searchQuery)
@@ -167,7 +170,10 @@ fun SearchScreen(
                     ingredients = ingredients,
                     categories = categories,
                     onFiltersChanged = { newFilters ->
+                        println("🔴 SearchScreen - onFiltersChanged RECEIVED: $newFilters")
+                        println("   About to call searchViewModel.updateFilters...")
                         searchViewModel.updateFilters(newFilters)
+                        println("   searchViewModel.updateFilters called successfully")
                         isSearchActive = searchQuery.isNotEmpty() || hasActiveFilters(newFilters)
                         if (searchQuery.isNotBlank() || hasActiveFilters(newFilters)) {
                             searchViewModel.searchWithFilters(searchQuery, newFilters)

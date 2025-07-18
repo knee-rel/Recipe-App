@@ -100,13 +100,31 @@ class SearchViewModel(
     }
 
     fun updateFilters(filters: SearchFilters) {
-        _currentFilters.value = SearchFilters()
+        println("⚫ SearchViewModel - updateFilters CALLED")
+        println("   Received filters: $filters")
+        println("   Current _currentFilters.value BEFORE: ${_currentFilters.value}")
 
-        if (_searchResults.value is UiState.Success) {
-            val currentResults = (_searchResults.value as UiState.Success<List<Meal>>).data
-            if (currentResults.isNotEmpty()) {
-                _searchResults.value = UiState.Success(emptyList())
+        try {
+            _currentFilters.value = filters
+
+            val newValue = _currentFilters.value
+            println("Current _currentFilters.value AFTER: $newValue")
+
+            if (newValue == filters) {
+                println("   ✅ Update SUCCESS: Values match")
+            } else {
+                println("   ❌ Update FAILED: Values don't match")
+                println("   Expected: $filters")
+                println("   Actual: $newValue")
+
+                // ✅ TRY alternative update method
+                println("   Trying alternative update method...")
+                _currentFilters.tryEmit(filters)
+                println("   After tryEmit: ${_currentFilters.value}")
             }
+        } catch (e: Exception) {
+            println("   ❌ Exception during update: ${e.message}")
+            e.printStackTrace()
         }
     }
 

@@ -14,6 +14,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -25,23 +26,32 @@ import androidx.compose.ui.Modifier
 fun FilterDropdown(
     label: String, selectedValue: String?, options: List<String>, onValueSelected: (String?) -> Unit
 ) {
-    var expanded by remember { mutableStateOf(false) }
+    var expanded by remember(selectedValue) { mutableStateOf(false) }
+
+    println("Filter dropdown: $label - recompose")
+    println("   selectedValue: '$selectedValue'")
 
     ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = it }) {
         OutlinedTextField(
-            value = selectedValue ?: "",
+            value = selectedValue ?: "No selection",
             onValueChange = { },
             readOnly = true,
             label = { Text(label) },
+//            placeholder = {
+//                if (selectedValue.isNullOrEmpty()) {
+//                    Text("Select $label")
+//                }
+//            },
             trailingIcon = {
                 Row {
-                    if (selectedValue != null) {
+                    if (!selectedValue.isNullOrEmpty()) {
                         IconButton(onClick = {
+                            println("🔴 FilterDropdown '$label' - CLEAR clicked")
                             onValueSelected(null)
                             expanded = false
                         }
                         ) {
-                            Icon(Icons.Default.Clear, contentDescription = "Clear")
+                            Icon(Icons.Default.Clear, contentDescription = "Clear $label")
                         }
                     }
                     ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
@@ -49,7 +59,7 @@ fun FilterDropdown(
             },
             modifier = Modifier
                 .menuAnchor()
-                .fillMaxWidth()
+                .fillMaxWidth(),
         )
 
         ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
@@ -57,7 +67,10 @@ fun FilterDropdown(
                 DropdownMenuItem(
                     text = { Text(option) },
                     onClick = {
+                        println("🟢 FilterDropdown '$label' - OPTION CLICKED: '$option'")
+                        println("   About to call onValueSelected with: '$option'")
                         onValueSelected(option)
+                        println("   onValueSelected called successfully")
                         expanded = false
                     }
                 )
